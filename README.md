@@ -1,4 +1,5 @@
-### Use this to create iam role for that lambda function
+## Running go on aws lambda
+### 1. Create iam role for the lambda function
 ```bash
 aws iam create-role \
     --role-name lambda-ex \
@@ -14,87 +15,31 @@ aws iam create-role \
             }
         ]
     }'
-
 ```
-
-
-
-{
-    "Role": {
-        "Path": "/",
-        "RoleName": "lambda-ex",
-        "RoleId": "AROARTTEOM2DXVKHTXX4B",
-        "Arn": "arn:aws:iam::110806066823:role/lambda-ex",
-        "CreateDate": "2024-02-24T05:03:58+00:00",
-        "AssumeRolePolicyDocument": {
-            "Version": "2012-10-17",
-            "Statement": [
-                {
-                    "Effect": "Allow",
-                    "Principal": {
-                        "Service": "lambda.amazonaws.com"
-                    },
-                    "Action": "sts:AssumeRole"
-                }
-            ]
-        }
-    }
-}
-
+### 2. Build go code
+```bash
+GOOS=linux GOARCH=amd64 go build -o bootstrap main.go
+```
+### 3. Create go lambda function
+```bash
 aws lambda create-function \
-  --function-name github-com-kaungmyathan22-golang-lambda-serverless \
+  --function-name  gosimple\
   --runtime go1.x \
-  --role arn:aws:iam::110806066823:role/lambda-ex \
-  --handler main \
-  --zip-file fileb://./dist/bootstrap.zip
+  --role arn-no:role/your-created-role \
+  --handler bootstrap \
+  --zip-file fileb://./bootstrap.zip
+```
 
+### 3. In case you updated code and want to redeploy
+```bash
 aws lambda update-function-code --function-name  gosimple --zip-file fileb://./dist/bootstrap.zip
-
-------------
-```
-{
-    "FunctionName": "go-lambda-serverless",
-    "FunctionArn": "arn:aws:lambda:eu-west-2:110806066823:function:go-lambda-serverless",
-    "Runtime": "go1.x",
-    "Role": "arn:aws:iam::110806066823:role/lambda-ex",
-    "Handler": "main",
-    "CodeSize": 5350565,
-    "Description": "",
-    "Timeout": 3,
-    "MemorySize": 128,
-    "LastModified": "2024-02-24T05:15:20.195+0000",
-    "CodeSha256": "2kJNk19uSRrAs7sMZhi5IEh0j09UW8nPh96LPlKAorg=",
-    "Version": "$LATEST",
-    "TracingConfig": {
-        "Mode": "PassThrough"
-    },
-    "RevisionId": "8098f2c6-82d4-4fcb-9722-f8a9d1d77a2e",
-    "State": "Pending",
-    "StateReason": "The function is being created.",
-    "StateReasonCode": "Creating",
-    "PackageType": "Zip",
-    "Architectures": [
-        "x86_64"
-    ],
-    "EphemeralStorage": {
-        "Size": 512
-    },
-    "SnapStart": {
-        "ApplyOn": "None",
-        "OptimizationStatus": "Off"
-    },
-    "RuntimeVersionConfig": {
-        "RuntimeVersionArn": "arn:aws:lambda:eu-west-2::runtime:30052276b0b7733e82eddf1f0942de1022c7dfbc0ca93cfc121c868194868dec"
-    },
-    "LoggingConfig": {
-        "LogFormat": "Text",
-        "LogGroup": "/aws/lambda/go-lambda-serverless"
-    }
-}
 ```
 
+### 4. Function executing or invocation.
+```bash
 aws lambda invoke \
-  --function-name github-com-kaungmyathan22-golang-lambda-serverless \
-  --payload '{"What is your name?":"Kaung Myat Han","How old are you?":22}' \
+  --function-name gosimple \
+  --payload file://testdata/event.json \
   --cli-binary-format raw-in-base64-out \
   output.txt
+```
